@@ -1,0 +1,28 @@
+defaults: []
+
+source: yfinance # yfinance for VN market
+universe: VN30
+
+symbols:
+  vn30:
+    - "VCB"
+    - "VIC"
+    - "VNM"
+    - "VPB"
+    - "TCB"
+    - "BID"
+    - "CTG"
+    - "FPT"
+    - "VRE"
+    - "VHM"
+    - "VJC"
+    - "VSH"
+    - "MSN"
+    - "SSI"
+  custom: []
+
+price:
+  fields: [open, high, low, close, volume]
+  adjust: true # adjusted prices
+
+cache: true

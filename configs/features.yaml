@@ -1,0 +1,15 @@
+defaults: []
+
+returns:
+  kind: log # log|arith
+  window: 1
+
+risk:
+  vol_window: 20
+  ann_factor: 252
+
+corr:
+  method: pearson # pearson|spearman
+  window: 60
+  shrinkage: lw # none|lw|oas
+

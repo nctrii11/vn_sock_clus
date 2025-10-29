@@ -1,0 +1,18 @@
+defaults: []
+
+engine: cvxpy
+objective: max_sharpe # max_sharpe|min_vol
+
+constraints:
+  long_only: true
+  weight_bounds: [0.0, 0.15]
+  turnover_limit: 0.4
+  budget: 1.0
+
+risk_model:
+  cov: shrinkage # sample|shrinkage
+  risk_free_rate: 0.02
+
+rebalance:
+  freq: M # D/W/M
+  costs_bps: 10

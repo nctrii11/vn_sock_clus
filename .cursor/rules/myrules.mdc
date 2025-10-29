@@ -1,0 +1,153 @@
+---
+alwaysApply: true
+---
+
+# Cursor AI Rules — VN50 Clustering + Markowitz (UV Edition)
+
+## 0) Project Context
+
+- Repo: VN50/VN30 clustering (Hierarchical) + Markowitz mean–variance + backtest.
+- Tech stack: Python 3.11, uv (env & deps), Hydra/OmegaConf (configs), SciPy/NumPy/Pandas, CVXPY, pytest, pre-commit (Black/Ruff), GitHub Actions CI.
+- Đường chạy chuẩn: data → features → clustering → optimize → backtest. Mọi tham số nằm trong `configs/*.yaml`, ghép qua `experiment_*.yaml`.
+
+## 1) Golden Commands (bắt buộc dùng)
+
+- Tuyệt đối dùng **uv**:
+  - Tạo venv: `uv venv --python 3.11 && source .venv/bin/activate`
+  - Cài deps: `uv sync` (CI dùng `uv sync --frozen` nếu có `uv.lock`)
+  - Chạy lệnh: `uv run python -m <module>`
+  - Chạy tool: `uvx <tool>`
+- Pipeline:
+  - `uv run python -m src.vn50.cli.fetch_data +experiment=experiment_hclust`
+  - `uv run python -m src.vn50.cli.build_features +experiment=experiment_hclust`
+  - `uv run python -m src.vn50.cli.run_clustering +experiment=experiment_hclust`
+  - `uv run python -m src.vn50.cli.optimize_portfolio +experiment=experiment_hclust`
+  - `uv run python -m src.vn50.cli.backtest +experiment=experiment_hclust`
+- Makefile:
+  - `make setup && make all`
+  - `make test`, `make lint`
+
+## 2) Codebase Map (đọc/ghi đúng chỗ)
+
+- `configs/`: tất cả tham số; **không hardcode** trong code.
+- `src/vn50/data/fetch.py`: nơi **duy nhất** viết logic tải dữ liệu (vnstock/yfinance). Xuất DataFrame **wide** (index=Date, columns=tickers, giá Close).
+- `src/vn50/data/preprocess.py`: chuẩn hóa/align lịch.
+- `src/vn50/features/*`: returns/risk/corr/distance (mỗi hàm thuần, không I/O).
+- `src/vn50/clustering/*`: HClust + utils. Nhận **distance matrix**; không tự tính corr ở đây.
+- `src/vn50/optimize/*`: Markowitz + constraints. Không I/O trong hàm tối ưu.
+- `src/vn50/backtest/*`: engine + metrics (không thay đổi dữ liệu gốc).
+- `src/vn50/cli/*`: orchestration theo Hydra, chịu trách nhiệm I/O (đọc từ `data/processed`, ghi `reports/`).
+- `reports/figures|artifacts`: chỉ output (weights, labels, equity, metrics).
+- `data/*`: staging (raw/interim/processed/cache). Không commit dữ liệu thô.
+
+## 3) Contracts & Interfaces (ràng buộc quan trọng)
+
+- `fetch_prices(symbols: list[str], start: str, end: str) -> pd.DataFrame`  
+  Trả **wide prices** (Close), index dạng DatetimeIndex, đã sort tăng dần, không duplicated index. Nếu dùng OHLCV, expose Close làm `prices`.
+- `make_returns(prices: pd.DataFrame, kind: 'log'|'arith', window:int=1) -> pd.DataFrame`  
+  Không I/O, dropna đầu kỳ hợp lý, giữ cột tickers.
+- `distance_from_corr(corr: pd.DataFrame) -> pd.DataFrame`  
+  Sử dụng Mantegna distance: `sqrt(0.5*(1-corr))`, diag = 0, đối xứng.
+- Optimizer `mean_variance_weights(mu: pd.Series, Sigma: pd.DataFrame, ...) -> pd.Series`  
+  Tổng trọng số = 1, tôn trọng `lb/ub`, index khớp tickers.
+- Backtest `walk_forward(prices, rebalance_freq, optimize)`  
+  `optimize(mu, Sigma)` **thuần** (không I/O), backtest áp phí/turnover ở đây (nếu có).
+
+## 4) Coding Standards
+
+- Style: Black + Ruff (pre-commit). Chạy `uvx pre-commit run -a` trước khi commit.
+- Không ghi dữ liệu trong modules feature/optimize/clustering; I/O chỉ ở `utils/io.py` hoặc CLI.
+- Không hardcode đường dẫn; luôn dùng `cfg.paths.*`.
+- Log mọi bước quan trọng bằng `utils.logging.task()`; không in thủ công.
+- Hàm ngắn, **pure** khi có thể; tách rõ computation (pure) và orchestration (CLI).
+- Không push notebook rác; đặt EDA vào `notebooks/` (OK), nhưng artifacts phải ra `reports/`.
+
+## 5) Testing & CI
+
+- Viết test tối thiểu khi thêm hàm:
+  - Hình dạng/điều kiện bất biến (sum(weights)=1, diag(D)=0…).
+  - Ứng xử với NaN đầu kỳ, cửa sổ lăn nhỏ.
+- Chạy: `make test` (CI sẽ chạy `uv run pytest -q`).
+- Không bypass test trong CI. Nếu test lâu, đánh dấu slow và tách.
+
+## 6) Config Discipline (Hydra)
+
+- Mọi tham số phải đến từ `cfg`:
+  - `cfg.features.returns.kind/window`
+  - `cfg.features.corr.window/method`
+  - `cfg.optimizer_markowitz.*`
+  - `cfg.paths.*`, `cfg.calendar.*`
+- Nếu cần experiment mới: tạo `configs/experiment_<name>.yaml`, **không** sửa cứng trong code.
+
+## 7) Performance & Robustness
+
+- Dùng `cov` shrinkage nếu `Sigma` near-singular (điều khiển ở config).
+- Kiểm tra index/columns align trước khi nhân ma trận; assert rõ ràng.
+- Với DataFrame lớn: ưu tiên parquet + categorical cho metadata nếu cần.
+- Không tính corr/distance nhiều lần; cache ở `data/processed` nếu tốn kém.
+
+## 8) Security & Privacy
+
+- Không commit `.env`, data thật (giờ/chứng khoán mua bán cá nhân).
+- Không ghi logs chứa secrets/API keys. Sử dụng `.env.example` để mô tả biến.
+
+## 9) Git Hygiene
+
+- Commit nhỏ, rõ ràng:
+  - `feat(fetch): add vnstock price loader (wide close)`
+  - `feat(opt): add sector-cap constraints`
+  - `fix(bt): handle empty period on rebalance`
+  - `chore(ci): switch to uv --frozen`
+- PR checklist:
+  - [ ] Passed `make lint` & `make test`
+  - [ ] Updated README/Configs nếu thay đổi giao diện CLI/param
+  - [ ] Added/updated tests
+
+## 10) What AI Should/Shouldn’t Do
+
+- ✅ Nên:
+  - Thêm code mới đúng module (đừng nhét vào CLI).
+  - Sửa logic nhưng **giữ nguyên contract** đầu ra (shape/index/columns).
+  - Viết test tương ứng, cập nhật Makefile/CI nếu cần.
+- ❌ Không nên:
+  - Gọi `python` trực tiếp; phải dùng `uv run`.
+  - Ghi file bừa bãi ngoài `data/` & `reports/`.
+  - Sửa configs mà không cập nhật README/PR notes.
+  - Hardcode tickers hoặc ngày; dùng `cfg.data.symbols.custom` & `cfg.calendar`.
+
+## 11) Guided TODOs (ưu tiên thực thi)
+
+1. Implement `src/vn50/data/fetch.py::fetch_prices` với `vnstock`:
+   - Input: `symbols, start, end`
+   - Output: **wide Close** DataFrame, index=Date (UTC-naive OK), cột=Tickers.
+   - Tôn trọng `cfg.data.price.adjust`.
+2. Viết `features/risk.py` thêm:
+   - `ann_cov(rets, ann_factor=252) -> DataFrame`
+   - `shrink_cov(cov, method='lw'|'oas'|'none') -> DataFrame`
+3. Nâng cấp `clustering/hclust.py`:
+   - Chọn `n_clusters` bằng gap-stat hoặc inconsistency.
+4. `backtest/engine.py`:
+   - Trả **equity curve** theo ngày; áp phí `cfg.optimizer_markowitz.rebalance.costs_bps`; tính turnover.
+5. `metrics.py`:
+   - `sharpe`, `sortino`, `calmar`, `hit_ratio`, `turnover`, `max_drawdown`, beta/alpha vs. VNIndex (khi có benchmark).
+
+## 12) Example Prompts Inside Cursor
+
+- “Generate vnstock fetcher that returns wide Close prices matching fetch_prices contract. Use uv, no I/O outside utils/io. Add small test.”
+- “Implement shrinkage covariance (LW/OAS) and wire via features config. Keep backward compatibility.”
+- “Add turnover & transaction costs to backtest engine; expose costs in configs and add unit test.”
+- “Provide CLI option to export dendrogram figure to reports/figures.”
+
+## 13) Error Handling (chuẩn hóa)
+
+- Kiểm tra input rỗng: nếu `symbols=[]`, log cảnh báo & raise ValueError.
+- Khi tối ưu lỗi hội tụ: thử solver khác (`ECOS`, `OSQP`), fallback `min_vol`.
+- Khi corr/sigma không PSD: áp shrinkage + clip eigenvalues nhỏ (nếu cần, có flag config).
+
+## 14) Documentation
+
+- Cập nhật `README.md` khi:
+  - Thêm bước pipeline mới / thay lệnh run / thay config keys.
+  - Thêm dependencies → chạy `uv lock --python 3.11` và commit `uv.lock`.
+
+# End of Rules

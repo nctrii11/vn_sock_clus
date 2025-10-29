@@ -1,0 +1,14 @@
+defaults:
+  - base
+  - data
+  - features
+  - cluster_hclust
+  - optimizer_markowitz
+  - _self_
+
+project: vn50-hclust-markowitz-demo
+
+calendar:
+  start: "2020-01-01"
+  end: "${now:YYYY-MM-DD}"
+  frequency: D

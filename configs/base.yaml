@@ -1,0 +1,22 @@
+defaults: []
+
+project: vn50-cluster-markowitz
+seed: 42
+
+paths:
+  data: data
+  raw: ${paths.data}/raw
+  interim: ${paths.data}/interim
+  processed: ${paths.data}/processed
+  cache: ${paths.data}/cache
+  reports: reports
+  artifacts: ${paths.reports}/artifacts
+
+calendar:
+  start: "2019-01-01"
+  end: "${now:YYYY-MM-DD}"
+  frequency: D # D/W/M
+
+logging:
+  level: INFO
+  rich: true

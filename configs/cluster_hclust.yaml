@@ -1,0 +1,11 @@
+defaults: []
+
+affinity: distance
+linkage: ward # ward|average|complete
+n_clusters: auto
+
+cut:
+  max_depth: null
+  max_distance: null
+
+labels: null
