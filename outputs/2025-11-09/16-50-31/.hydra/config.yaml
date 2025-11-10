@@ -1,0 +1,94 @@
+project: vn50-hclust-markowitz-demo
+seed: 42
+paths:
+  data: data
+  raw: ${paths.data}/raw
+  interim: ${paths.data}/interim
+  processed: ${paths.data}/processed
+  cache: ${paths.data}/cache
+  reports: reports
+  artifacts: ${paths.reports}/artifacts
+calendar:
+  start: '2020-11-09'
+  end: '2025-10-31'
+  frequency: D
+logging:
+  level: INFO
+  rich: true
+source: yfinance
+universe: VN30
+symbols:
+  vn30:
+  - ACB
+  - BCM
+  - BID
+  - BVH
+  - CTG
+  - FPT
+  - GAS
+  - GVR
+  - HDB
+  - HPG
+  - MBB
+  - MSN
+  - MWG
+  - PLX
+  - POW
+  - SAB
+  - SHB
+  - SSB
+  - SSI
+  - STB
+  - TCB
+  - TPB
+  - VCB
+  - VHM
+  - VIB
+  - VIC
+  - VJC
+  - VNM
+  - VPB
+  - VRE
+  custom: []
+price:
+  fields:
+  - open
+  - high
+  - low
+  - close
+  - volume
+  adjust: true
+cache: true
+returns:
+  kind: log
+  window: 1
+risk:
+  vol_window: 20
+  ann_factor: 252
+corr:
+  method: pearson
+  window: 60
+  shrinkage: lw
+affinity: distance
+linkage: ward
+n_clusters: auto
+cut:
+  max_depth: null
+  max_distance: null
+labels: null
+engine: cvxpy
+objective: max_sharpe
+constraints:
+  long_only: true
+  weight_bounds:
+  - 0.0
+  - 0.15
+  turnover_limit: 0.4
+  budget: 1.0
+risk_model:
+  cov: shrinkage
+  risk_free_rate: 0.02
+rebalance:
+  freq: M
+  costs_bps: 10
+experiment: experiment_hclust

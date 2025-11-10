@@ -37,6 +37,14 @@ def mean_variance_weights(
     mu_vec = mu.values
     Sigma_mat = Sigma.values
 
+    # Regularize covariance matrix to ensure positive semi-definite
+    # Add small diagonal term for numerical stability
+    epsilon = 1e-6
+    Sigma_mat = Sigma_mat + epsilon * np.eye(n)
+
+    # Ensure symmetry
+    Sigma_mat = (Sigma_mat + Sigma_mat.T) / 2
+
     # Define variables
     w = cp.Variable(n)
 

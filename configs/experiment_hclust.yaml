@@ -9,6 +9,6 @@ defaults:
 project: vn50-hclust-markowitz-demo
 
 calendar:
-  start: "2020-01-01"
-  end: "${now:YYYY-MM-DD}"
+  start: "2020-11-09"
+  end: "2025-10-31"
   frequency: D

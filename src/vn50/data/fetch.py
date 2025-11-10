@@ -1,29 +1,30 @@
-"""Data fetching utilities for VN market using yfinance."""
+"""Data fetching utilities for VN market using vnstock."""
 
 from __future__ import annotations
 
 from pathlib import Path
+import time
 
 import pandas as pd
-import yfinance as yf
+from vnstock import stock_historical_data
 
 from ..utils.io import read_parquet, write_parquet
 from .preprocess import align_calendar
 
 
 def fetch_prices(symbols: list[str], start: str, end: str, adjust: bool = True) -> pd.DataFrame:
-    """Fetch historical prices for VN market symbols.
+    """Fetch historical prices for VN market symbols using vnstock.
 
-    Fetches data from yfinance and returns a wide DataFrame with:
+    Fetches data from vnstock (cafe.vn) and returns a wide DataFrame with:
     - Index: DatetimeIndex (sorted ascending)
     - Columns: Ticker symbols
-    - Values: Close prices (adjusted by default)
+    - Values: Close prices
 
     Args:
-        symbols: List of ticker symbols (e.g., ["VCB.VN", "VIC.VN"])
+        symbols: List of ticker symbols (e.g., ["VCB", "VIC"])
         start: Start date (YYYY-MM-DD)
         end: End date (YYYY-MM-DD)
-        adjust: Whether to use adjusted prices (default: True)
+        adjust: Whether to use adjusted prices (default: True, not used in vnstock)
 
     Returns:
         Wide DataFrame with Date index and tickers as columns (Close prices)
@@ -35,35 +36,63 @@ def fetch_prices(symbols: list[str], start: str, end: str, adjust: bool = True) 
         raise ValueError("Symbols list cannot be empty")
 
     # Fetch data for each symbol
-    dfs = []
+    all_prices = {}
     for symbol in symbols:
         try:
-            ticker = yf.Ticker(symbol)
-            df_ticker = ticker.history(start=start, end=end, auto_adjust=adjust)
-            if df_ticker.empty:
+            # Remove .VN suffix if present
+            symbol_clean = symbol.replace('.VN', '')
+            
+            # Get historical data using vnstock
+            df = stock_historical_data(
+                symbol=symbol_clean,
+                start_date=start,
+                end_date=end,
+                resolution='1D',
+                type='stock'
+            )
+            
+            if df is not None and not df.empty and 'close' in df.columns:
+                # Set index to time/date column
+                if 'time' in df.columns:
+                    df['time'] = pd.to_datetime(df['time'])
+                    df = df.set_index('time')
+                elif 'date' in df.columns:
+                    df['date'] = pd.to_datetime(df['date'])
+                    df = df.set_index('date')
+                
+                # Remove duplicates
+                df = df[~df.index.duplicated(keep='first')]
+                all_prices[symbol] = df['close']
+            else:
                 print(f"Warning: No data for {symbol}")
-                continue
-            dfs.append((symbol, df_ticker))
+                
         except Exception as e:
             print(f"Warning: Error fetching {symbol}: {e}")
             continue
+        
+        # Sleep to avoid rate limiting
+        time.sleep(0.3)
 
-    if not dfs:
+    if not all_prices:
         raise ValueError("No data available for any symbol")
 
-    # Combine into wide format
-    prices_list = []
-    for symbol, df in dfs:
-        prices_list.append(df[["Close"]].rename(columns={"Close": symbol}))
-
-    # Merge all tickers
-    prices = pd.concat(prices_list, axis=1)
-
+    # Get union of all dates
+    all_dates = pd.DatetimeIndex([])
+    for symbol, series in all_prices.items():
+        all_dates = all_dates.union(series.index)
+    
+    all_dates = all_dates.sort_values()
+    
+    # Create DataFrame with aligned dates
+    prices = pd.DataFrame(index=all_dates)
+    for symbol, series in all_prices.items():
+        prices[symbol] = series
+    
     # Sort by date
     prices = prices.sort_index()
-
-    # Remove duplicate dates
-    prices = prices[~prices.index.duplicated(keep="first")]
+    
+    # Fill forward missing values
+    prices = prices.ffill()
 
     return prices
 

@@ -1,24 +1,40 @@
 defaults: []
 
-source: yfinance # yfinance for VN market
+source: vnstock # vnstock for VN market (cafe.vn)
 universe: VN30
 
 symbols:
   vn30:
-    - "VCB"
-    - "VIC"
-    - "VNM"
-    - "VPB"
-    - "TCB"
+    - "ACB"
+    - "BCM"
     - "BID"
+    - "BVH"
     - "CTG"
     - "FPT"
-    - "VRE"
-    - "VHM"
-    - "VJC"
-    - "VSH"
+    - "GAS"
+    - "GVR"
+    - "HDB"
+    - "HPG"
+    - "MBB"
     - "MSN"
+    - "MWG"
+    - "PLX"
+    - "POW"
+    - "SAB"
+    - "SHB"
+    - "SSB"
     - "SSI"
+    - "STB"
+    - "TCB"
+    - "TPB"
+    - "VCB"
+    - "VHM"
+    - "VIB"
+    - "VIC"
+    - "VJC"
+    - "VNM"
+    - "VPB"
+    - "VRE"
   custom: []
 
 price:
