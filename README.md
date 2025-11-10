@@ -1,179 +1,179 @@
-# VN50 Clustering + Markowitz
+# VN50 Phân cụm + Markowitz
 
-End-to-end pipeline for VN30/VN50 clustering-based portfolio optimization using hierarchical clustering and Markowitz mean-variance optimization.
+Pipeline hoàn chỉnh để tối ưu hóa danh mục đầu tư VN30/VN50 dựa trên phân cụm phân cấp và tối ưu hóa trung bình-phương sai Markowitz.
 
-## Project Overview
+## Tổng quan Dự án
 
-This project implements a complete quantitative research pipeline:
+Dự án này triển khai một pipeline nghiên cứu định lượng hoàn chỉnh:
 
-- **Data Fetching**: VN30/VN50 equity data via yfinance
-- **Feature Engineering**: Returns, risk metrics, correlation matrices
-- **Clustering**: Hierarchical clustering for asset grouping
-- **Optimization**: Markowitz mean-variance portfolio optimization
-- **Backtesting**: Walk-forward backtesting with performance metrics
-- **Visualization**: Professional charts and dashboards
+- **Thu thập Dữ liệu**: Dữ liệu cổ phiếu VN30/VN50 qua vnstock
+- **Xây dựng Đặc trưng**: Lợi nhuận, chỉ số rủi ro, ma trận tương quan
+- **Phân cụm**: Phân cụm phân cấp để nhóm tài sản
+- **Tối ưu hóa**: Tối ưu hóa danh mục trung bình-phương sai Markowitz
+- **Kiểm định lại**: Kiểm định với các chỉ số hiệu suất
+- **Trực quan hóa**: Biểu đồ và bảng điều khiển chuyên nghiệp
 
-## Tech Stack
+## Công nghệ Sử dụng
 
 - Python 3.11
-- **uv** for environment and dependency management
-- Hydra/OmegaConf for configuration
-- NumPy/SciPy/Pandas for data processing
-- CVXPY for convex optimization
-- matplotlib/seaborn for visualization
-- pytest for testing
+- **uv** để quản lý môi trường và phụ thuộc
+- Hydra/OmegaConf để cấu hình
+- NumPy/SciPy/Pandas để xử lý dữ liệu
+- CVXPY để tối ưu hóa lồi
+- matplotlib/seaborn để trực quan hóa
+- pytest để kiểm thử
 
-## Quickstart
+## Bắt đầu Nhanh
 
-### 1. Setup Environment
+### 1. Thiết lập Môi trường
 
 ```bash
-# Install uv (if not already installed)
+# Cài đặt uv (nếu chưa có)
 pipx install uv
 
-# Create virtual environment
+# Tạo môi trường ảo
 make venv
 
-# Install dependencies
+# Cài đặt các phụ thuộc
 make install
 ```
 
-On Windows PowerShell:
+Trên Windows PowerShell:
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
 make install
 ```
 
-On Linux/Mac:
+Trên Linux/Mac:
 
 ```bash
 source .venv/bin/activate
 make install
 ```
 
-### 2. Run Full Pipeline
+### 2. Chạy Pipeline Đầy đủ
 
-**Option A: Complete pipeline with visualizations**
-
-```bash
-make all         # Run all steps including visualization
-```
-
-**Option B: Individual steps**
+**Tùy chọn A: Pipeline hoàn chỉnh với trực quan hóa**
 
 ```bash
-make data        # Fetch market data
-make features    # Build features (returns, correlation, etc.)
-make cluster     # Run hierarchical clustering
-make opt         # Optimize portfolio
-make backtest    # Run backtest
-make visualize   # Create charts
+make all         # Chạy tất cả các bước bao gồm trực quan hóa
 ```
 
-**Option C: PowerShell scripts (Windows)**
+**Tùy chọn B: Các bước riêng lẻ**
+
+```bash
+make data        # Thu thập dữ liệu thị trường
+make features    # Xây dựng đặc trưng (lợi nhuận, tương quan, v.v.)
+make cluster     # Chạy phân cụm phân cấp
+make opt         # Tối ưu hóa danh mục
+make backtest    # Chạy kiểm định lại
+make visualize   # Tạo biểu đồ
+```
+
+**Tùy chọn C: Scripts PowerShell (Windows)**
 
 ```powershell
-# Complete pipeline with visualizations
+# Pipeline hoàn chỉnh với trực quan hóa
 .\run_complete_pipeline.ps1
 
-# View all generated charts
+# Xem tất cả biểu đồ đã tạo
 .\open_charts.ps1
 ```
 
-### 3. Run Tests
+### 3. Chạy Kiểm thử
 
 ```bash
 make test
 ```
 
-### 4. Lint Code
+### 4. Kiểm tra Mã nguồn
 
 ```bash
 make lint
 ```
 
-## Project Structure
+## Cấu trúc Dự án
 
 ```
 vn50-cluster-markowitz/
-├── configs/           # Hydra configuration files
-├── data/             # Raw, interim, processed, cache
-├── reports/          # Figures and artifacts
-├── src/vn50/         # Source code
-│   ├── utils/        # Utilities (io, logging)
-│   ├── data/         # Data fetching and preprocessing
-│   ├── features/     # Returns, risk, correlation
-│   ├── clustering/   # Hierarchical clustering
-│   ├── optimize/     # Markowitz optimization
-│   ├── backtest/     # Backtesting engine and metrics
-│   ├── visualization/ # Charts and dashboards
-│   └── cli/          # CLI entrypoints
-└── tests/            # Test suite
+├── configs/           # Các file cấu hình Hydra
+├── data/             # Dữ liệu thô, trung gian, đã xử lý, cache
+├── reports/          # Biểu đồ và sản phẩm
+├── src/vn50/         # Mã nguồn
+│   ├── utils/        # Tiện ích (io, logging)
+│   ├── data/         # Thu thập và tiền xử lý dữ liệu
+│   ├── features/     # Lợi nhuận, rủi ro, tương quan
+│   ├── clustering/   # Phân cụm phân cấp
+│   ├── optimize/     # Tối ưu hóa Markowitz
+│   ├── backtest/     # Công cụ kiểm định và chỉ số
+│   ├── visualization/ # Biểu đồ và bảng điều khiển
+│   └── cli/          # Điểm vào CLI
+└── tests/            # Bộ kiểm thử
 ```
 
-## Configuration
+## Cấu hình
 
-All parameters are managed via Hydra configs in `configs/`:
+Tất cả tham số được quản lý qua cấu hình Hydra trong `configs/`:
 
-- `base.yaml`: Global defaults
-- `data.yaml`: Data sources and symbols
-- `features.yaml`: Feature engineering parameters
-- `cluster_hclust.yaml`: Clustering configuration
-- `optimizer_markowitz.yaml`: Optimization settings
-- `experiment_hclust.yaml`: Complete experiment config
+- `base.yaml`: Giá trị mặc định toàn cục
+- `data.yaml`: Nguồn dữ liệu và ký hiệu
+- `features.yaml`: Tham số xây dựng đặc trưng
+- `cluster_hclust.yaml`: Cấu hình phân cụm
+- `optimizer_markowitz.yaml`: Cài đặt tối ưu hóa
+- `experiment_hclust.yaml`: Cấu hình thí nghiệm hoàn chỉnh
 
-## Development
+## Phát triển
 
-### Adding New Features
+### Thêm Tính năng Mới
 
-1. Place pure computation functions in appropriate modules (`features/`, `clustering/`, `optimize/`)
-2. Add I/O logic to `utils/io.py` or CLI modules
-3. Write tests in `tests/`
-4. Update configs if new parameters are needed
-5. Run `make test` and `make lint`
+1. Đặt các hàm tính toán thuần túy vào các module phù hợp (`features/`, `clustering/`, `optimize/`)
+2. Thêm logic I/O vào `utils/io.py` hoặc các module CLI
+3. Viết kiểm thử trong `tests/`
+4. Cập nhật cấu hình nếu cần tham số mới
+5. Chạy `make test` và `make lint`
 
-### Code Standards
+### Tiêu chuẩn Mã nguồn
 
-- Use `uv run` for all Python commands
-- All parameters from Hydra config (`cfg`)
-- I/O only in `utils/io.py` or CLI modules
-- Pure functions for computation
-- Log via `utils.logging.task()`
-- Write tests for new functions
+- Sử dụng `uv run` cho tất cả lệnh Python
+- Tất cả tham số từ cấu hình Hydra (`cfg`)
+- I/O chỉ trong `utils/io.py` hoặc các module CLI
+- Hàm thuần túy cho tính toán
+- Ghi log qua `utils.logging.task()`
+- Viết kiểm thử cho các hàm mới
 
-## 📊 Visualization
+## 📊 Trực quan hóa
 
-The project includes comprehensive visualizations:
+Dự án bao gồm các trực quan hóa toàn diện:
 
-### Generated Charts
+### Biểu đồ Được tạo
 
-- **Price Evolution**: Normalized stock price movements
-- **Correlation Heatmap**: Stock correlation matrix
-- **Portfolio Weights**: Optimized portfolio allocation
-- **Equity Curve**: Portfolio performance over time
-- **Rolling Metrics**: Sharpe ratio and volatility trends
-- **Drawdown Analysis**: Risk analysis and drawdown periods
-- **Performance Summary**: Comprehensive performance dashboard
+- **Biến động Giá**: Biến động giá cổ phiếu chuẩn hóa
+- **Ma trận Tương quan**: Ma trận tương quan cổ phiếu
+- **Tỷ trọng Danh mục**: Phân bổ danh mục tối ưu
+- **Đường cong Vốn**: Hiệu suất danh mục theo thời gian
+- **Chỉ số Trượt**: Xu hướng chỉ số Sharpe và độ biến động
+- **Phân tích Sụt giảm**: Phân tích rủi ro và giai đoạn sụt giảm
+- **Tóm tắt Hiệu suất**: Bảng điều khiển hiệu suất toàn diện
 
-### Usage
+### Sử dụng
 
 ```bash
-# Create all visualizations
+# Tạo tất cả trực quan hóa
 make visualize
 
-# View charts (Windows)
+# Xem biểu đồ (Windows)
 .\open_charts.ps1
 ```
 
-### Customization
+### Tùy chỉnh
 
-- Modify `src/vn50/visualization/plots.py` for custom charts
-- Adjust colors, sizes, and styles
-- Add new visualization functions
+- Chỉnh sửa `src/vn50/visualization/plots.py` để tạo biểu đồ tùy chỉnh
+- Điều chỉnh màu sắc, kích thước và kiểu dáng
+- Thêm các hàm trực quan hóa mới
 
-See `VISUALIZATION_GUIDE.md` for detailed documentation.
+Xem `VISUALIZATION_GUIDE.md` để biết tài liệu chi tiết.
 
-## License
+## Giấy phép
 
 MIT
